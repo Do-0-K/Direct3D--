@@ -45,7 +45,7 @@
     <ClInclude Include="Resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="과제2.h">
+    <ClInclude Include="과제3.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="d3dx12.h">
@@ -86,7 +86,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="과제2.cpp">
+    <ClCompile Include="과제3.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="DDSTextureLoader12.cpp">

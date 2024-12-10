@@ -24,6 +24,7 @@
     <ProjectGuid>{305666f6-a683-4311-bd1e-3283c103d1d1}</ProjectGuid>
     <RootNamespace>과제2</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>과제3</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -141,7 +142,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="WICTextureLoader12.h" />
-    <ClInclude Include="과제2.h" />
+    <ClInclude Include="과제3.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
@@ -155,7 +156,7 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="WICTextureLoader12.cpp" />
-    <ClCompile Include="과제2.cpp" />
+    <ClCompile Include="과제3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="과제2.rc" />
