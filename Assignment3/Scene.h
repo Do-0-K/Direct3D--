@@ -34,7 +34,19 @@ struct LIGHTS
 {
 	LIGHT					m_pLights[MAX_LIGHTS];
 	XMFLOAT4				m_xmf4GlobalAmbient;
-	int						m_nLights;
+};
+
+struct MATERIAL
+{
+	XMFLOAT4				m_xmf4Ambient;
+	XMFLOAT4				m_xmf4Diffuse;
+	XMFLOAT4				m_xmf4Specular; //(r,g,b,a=power)
+	XMFLOAT4				m_xmf4Emissive;
+};
+
+struct MATERIALS
+{
+	MATERIAL				m_pReflections[MAX_MATERIALS];
 };
 
 class CDescriptorHeap
@@ -124,13 +136,16 @@ public:
 	CSkyBox* m_pSkyBox = NULL;
 	CHeightMapTerrain* m_pTerrain = NULL;
 
-	LIGHT* m_pLights = NULL;
-	int									m_nLights = 0;
-
-	XMFLOAT4							m_xmf4GlobalAmbient;
+	LIGHTS* m_pLights = NULL;
+	float							m_fLightRotationAngle = 0.0f;
 
 	ID3D12Resource* m_pd3dcbLights = NULL;
 	LIGHTS* m_pcbMappedLights = NULL;
+
+	MATERIALS* m_pMaterials = NULL;
+
+	ID3D12Resource* m_pd3dcbMaterials = NULL;
+	MATERIAL* m_pcbMappedMaterials = NULL;
 
 	float						m_fElapsedTime = 0.0f;
 

@@ -1,13 +1,5 @@
-//모델 + 스카이박스
-////////////////
-struct MATERIAL
-{
-    float4 m_cAmbient;
-    float4 m_cDiffuse;
-    float4 m_cSpecular; //a = power
-    float4 m_cEmissive;
-};
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                  cbuffer
 cbuffer cbCameraInfo : register(b1)
 {
     matrix gmtxView : packoffset(c0);
@@ -19,7 +11,7 @@ cbuffer cbCameraInfo : register(b1)
 cbuffer cbGameObjectInfo : register(b2)
 {
     matrix gmtxGameObject : packoffset(c0);
-    MATERIAL gMaterial : packoffset(c4);
+    uint gnMaterial : packoffset(c4);
     uint gnTexturesMask : packoffset(c8);
 };
 
@@ -144,6 +136,16 @@ struct GS_PARTICLE_DRAW_OUTPUT
     uint type : PARTICLETYPE;
 };
 
+struct CB_TO_LIGHT_SPACE
+{
+    matrix mtxToTextureSpace;
+    float4 f4Position;
+};
+
+cbuffer cbToLightSpace : register(b5)
+{
+    CB_TO_LIGHT_SPACE gcbToLightSpaces[MAX_LIGHTS];
+};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                  Define 파티클
 #define PARTICLE_TYPE_EMITTER		0
