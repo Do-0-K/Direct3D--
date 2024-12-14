@@ -321,6 +321,17 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	pObjectShader->CreateShader(pd3dDevice, pd3dCommandList ,m_pd3dGraphicsRootSignature);
 	pObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pTerrain);
 	m_ppShaders[0] = pObjectShader;
+
+	CMaterial* pMaterial = new CMaterial();
+	pMaterial->SetReflection(7);
+
+	m_DirectLight = new CGameObject(1);
+	m_DirectLight->SetMesh(sharedBulletMesh);
+	m_DirectLight->SetMaterial(0,pMaterial);
+	m_DirectLight->Rotate(180.0f, 0.0f, 0.0f);
+	m_DirectLight->Rotate(0.0f, 0.0f, 45.0f);
+	m_DirectLight->SetPosition(XMFLOAT3(_PLANE_WIDTH * 0.25f, 450.0f, 0));
+
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
@@ -342,6 +353,7 @@ void CScene::ReleaseObjects()
 
 	if (m_pSkyBox) delete m_pSkyBox;
 	if (m_pTerrain) delete m_pTerrain;
+	if (m_DirectLight)delete m_DirectLight;
 
 	if (skymap)
 	{
@@ -479,7 +491,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[10].DescriptorTable.pDescriptorRanges = &(pd3dDescriptorRanges[7]);
 	pd3dRootParameters[10].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 #else
-	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[8];
+	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[9];
 
 	pd3dDescriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	pd3dDescriptorRanges[0].NumDescriptors = 7;
@@ -529,7 +541,13 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dDescriptorRanges[7].RegisterSpace = 0;
 	pd3dDescriptorRanges[7].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[13];
+	pd3dDescriptorRanges[8].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	pd3dDescriptorRanges[8].NumDescriptors = MAX_DEPTH_TEXTURES;
+	pd3dDescriptorRanges[8].BaseShaderRegister = 16; //Depth Buffer
+	pd3dDescriptorRanges[8].RegisterSpace = 0;
+	pd3dDescriptorRanges[8].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	D3D12_ROOT_PARAMETER pd3dRootParameters[14];
 
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 1; //Camera
@@ -596,6 +614,11 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[12].Descriptor.ShaderRegister = 5; //ToLight Info
 	pd3dRootParameters[12].Descriptor.RegisterSpace = 0;
 	pd3dRootParameters[12].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	pd3dRootParameters[13].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	pd3dRootParameters[13].DescriptorTable.NumDescriptorRanges = 1;
+	pd3dRootParameters[13].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[8]; //Depth Buffer
+	pd3dRootParameters[13].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 #endif
 
 	D3D12_STATIC_SAMPLER_DESC pd3dSamplerDescs[2];
@@ -705,6 +728,7 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	if (m_pSkyBox) m_pSkyBox->ReleaseUploadBuffers();
 	if (m_pTerrain) m_pTerrain->ReleaseUploadBuffers();
+	if (m_DirectLight)m_DirectLight->ReleaseUploadBuffers();
 	for (int j = 0; j < m_nObject; j++) if (m_ppObject[j]) m_ppObject[j]->ReleaseUploadBuffers();
 	for (int j = 0; j < skymap_num; j++) if (skymap[j]) skymap[j]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nParticle; i++) m_ppParticle[i]->ReleaseUploadBuffers();
@@ -805,6 +829,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 		{
 			m_ppShaders[i]->Render(pd3dCommandList, pCamera, 0);
 		}
+		if (m_DirectLight) { m_DirectLight->Render(pd3dCommandList, pCamera); }
 	}
 	else {
 		RenderParticle(pd3dCommandList, pCamera);

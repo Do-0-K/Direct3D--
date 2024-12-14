@@ -146,6 +146,19 @@ cbuffer cbToLightSpace : register(b5)
 {
     CB_TO_LIGHT_SPACE gcbToLightSpaces[MAX_LIGHTS];
 };
+
+struct VS_LIGHTING_INPUT
+{
+    float3 position : POSITION;
+    float3 normal : NORMAL;
+};
+
+struct VS_LIGHTING_OUTPUT
+{
+    float4 position : SV_POSITION;
+    float3 positionW : POSITION;
+    float3 normalW : NORMAL;
+};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                  Define ÆÄÆ¼Å¬
 #define PARTICLE_TYPE_EMITTER		0
@@ -252,7 +265,8 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
         float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
         float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] ¡æ [-1, 1]
         normalW = normalize(mul(vNormal, TBN));
-        cIllumination = Lighting(input.positionW, normalW);
+        float4 shadowMapUVs[MAX_LIGHTS];
+        cIllumination = Lighting(input.positionW, normalW,false, shadowMapUVs);
         cColor = lerp(cColor, cIllumination, 0.5f);
     }
 
@@ -637,4 +651,27 @@ float4 PSParticleDraw(GS_PARTICLE_DRAW_OUTPUT input) : SV_TARGET
     //float4 cColor = float4(1.0f, 1.0f, 0.0f, 0.0f);
     
     return (cColor);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+VS_LIGHTING_OUTPUT VSLighting(VS_LIGHTING_INPUT input)
+{
+    VS_LIGHTING_OUTPUT output;
+
+    output.normalW = mul(input.normal, (float3x3) gmtxGameObject);
+    output.positionW = (float3) mul(float4(input.position, 1.0f), gmtxGameObject);
+    output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
+
+    return (output);
+}
+
+float4 PSLighting(VS_LIGHTING_OUTPUT input) : SV_TARGET
+{
+    input.normalW = normalize(input.normalW);
+    float4 shadowMapUVs[MAX_LIGHTS];
+    float4 cIllumination = Lighting(input.positionW, input.normalW, false, shadowMapUVs);
+
+//	return(cIllumination);
+    return (float4(input.normalW * 0.5f + 0.5f, 1.0f));
 }
