@@ -145,6 +145,7 @@
     <ClInclude Include="과제3.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\APPDATA\LOCAL\TEMP\TFSTEMP\VCTMP23260_102106.SHADER.00000000.CPP" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DDSTextureLoader12.cpp" />
     <ClCompile Include="GameFramework.cpp" />

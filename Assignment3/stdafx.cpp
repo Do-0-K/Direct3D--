@@ -7,6 +7,8 @@
 #include "DDSTextureLoader12.h"
 #include "WICTextureLoader12.h"
 
+bool gbTerrainTessellationWireframe = false;
+
 int gnCurrentParticles = 0;
 
 UINT gnRtvDescriptorIncrementSize = 0;

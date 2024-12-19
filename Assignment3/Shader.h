@@ -23,7 +23,9 @@ private:
 protected:
 	ID3DBlob* m_pd3dVertexShaderBlob = NULL;
 	ID3DBlob* m_pd3dPixelShaderBlob = NULL;
+	ID3DBlob* m_pd3dHullShaderBlob = NULL;
 	ID3DBlob* m_pd3dGeometryShaderBlob = NULL;
+	ID3DBlob* m_pd3dDomainShaderBlob = NULL;
 
 	int									m_nPipelineStates = 0;
 	ID3D12PipelineState** m_ppd3dPipelineStates = NULL;
@@ -80,6 +82,23 @@ public:
 		D3D12_SHADER_BYTECODE Desc{};
 		return Desc;
 	};
+	virtual D3D12_SHADER_BYTECODE CShader::CreateDomainShader()
+	{
+		D3D12_SHADER_BYTECODE d3dShaderByteCode;
+		d3dShaderByteCode.BytecodeLength = 0;
+		d3dShaderByteCode.pShaderBytecode = NULL;
+
+		return(d3dShaderByteCode);
+	}
+
+	virtual D3D12_SHADER_BYTECODE CShader::CreateHullShader()
+	{
+		D3D12_SHADER_BYTECODE d3dShaderByteCode;
+		d3dShaderByteCode.BytecodeLength = 0;
+		d3dShaderByteCode.pShaderBytecode = NULL;
+
+		return(d3dShaderByteCode);
+	}
 
 	D3D12_SHADER_BYTECODE CompileShaderFromFile(WCHAR* pszFileName, LPCSTR pszShaderName, LPCSTR pszShaderProfile, ID3DBlob** ppd3dShaderBlob);
 	D3D12_SHADER_BYTECODE ReadCompiledShaderFromFile(WCHAR* pszFileName, ID3DBlob** ppd3dShaderBlob = NULL);
@@ -217,10 +236,27 @@ public:
 	virtual ~CTerrainShader();
 
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
+
+	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,ID3D12RootSignature* pd3dGraphicsRootSignature);
+};
+
+class CTerrainTessellationShader : public CStandardShader
+{
+public:
+	CTerrainTessellationShader();
+	virtual ~CTerrainTessellationShader();
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_RASTERIZER_DESC CreateRasterizerState();
 
 	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
 	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
+	virtual D3D12_SHADER_BYTECODE CreateDomainShader();
+	virtual D3D12_SHADER_BYTECODE CreateHullShader();
 	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, void* pContext);
 };
 
 class CBulletShader : public CShader

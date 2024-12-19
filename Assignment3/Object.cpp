@@ -1142,12 +1142,17 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	pTerrainTexture->LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, L"Image/Base_Texture.dds", RESOURCE_TEXTURE2D, 0);
 	pTerrainTexture->LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, L"Image/Detail_Texture_7.dds", RESOURCE_TEXTURE2D, 1);
 	pTerrainTexture->LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, L"Image/HeightMap(Alpha).dds", RESOURCE_TEXTURE2D, 2);
+	CScene::CreateShaderResourceViews(pd3dDevice, pTerrainTexture, 0, 6);
 
 	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255); //256ÀÇ ¹è¼ö
 
+#ifdef _WITH_TERRAIN_TESSELATION
+	CTerrainTessellationShader* pTerrainShader = new CTerrainTessellationShader();
+#else
 	CTerrainShader* pTerrainShader = new CTerrainShader();
+#endif
 	pTerrainShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
-	CScene::CreateShaderResourceViews(pd3dDevice, pTerrainTexture, 0, 6);
+	pTerrainShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE d3dCbvGPUDescriptorHandle = CScene::CreateConstantBufferView(pd3dDevice, m_pd3dcbGameObject, ncbElementBytes);
 	SetCbvGPUDescriptorHandle(d3dCbvGPUDescriptorHandle);

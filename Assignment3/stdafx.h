@@ -74,6 +74,14 @@ using Microsoft::WRL::ComPtr;
 #define _PLANE_WIDTH			1024
 #define _PLANE_HEIGHT			1024
 
+#define _WITH_TERRAIN_TESSELATION
+
+#ifdef _WITH_TERRAIN_TESSELATION
+#define _WITH_TERRAIN_PARTITION
+#else
+#define _WITH_VERTICES_AS_SCALING
+#endif
+
 //#define _WITH_CB_GAMEOBJECT_32BIT_CONSTANTS
 //#define _WITH_CB_GAMEOBJECT_ROOT_DESCRIPTOR
 #define _WITH_CB_WORLD_MATRIX_DESCRIPTOR_TABLE
@@ -99,6 +107,8 @@ extern int gnCurrentParticles;
 extern UINT gnCbvSrvDescriptorIncrementSize;
 extern UINT	gnRtvDescriptorIncrementSize;
 extern UINT gnDsvDescriptorIncrementSize;
+
+extern bool gbTerrainTessellationWireframe;
 
 extern void SynchronizeResourceTransition(ID3D12GraphicsCommandList* pd3dCommandList, ID3D12Resource* pd3dResource, D3D12_RESOURCE_STATES d3dStateBefore, D3D12_RESOURCE_STATES d3dStateAfter);
 extern void WaitForGpuComplete(ID3D12CommandQueue* pd3dCommandQueue, ID3D12Fence* pd3dFence, UINT64 nFenceValue, HANDLE hFenceEvent);

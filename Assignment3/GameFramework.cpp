@@ -413,6 +413,18 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			break;
 		case VK_F5:
 			break;
+		case 'R':
+			m_pcbMappedFrameworkInfo->m_nRenderMode = 0x00;
+			break;
+		case 'Y':
+			m_pcbMappedFrameworkInfo->m_nRenderMode |= DYNAMIC_TESSELLATION;
+			break;
+		case 'D':
+			m_pcbMappedFrameworkInfo->m_nRenderMode |= (DYNAMIC_TESSELLATION | DEBUG_TESSELLATION);
+			break;
+		case 'W':
+			::gbTerrainTessellationWireframe = !::gbTerrainTessellationWireframe;
+			break;
 		case VK_CONTROL:
 			((CAirplanePlayer*)m_pPlayer)->FireBullet(p_SelectObject);
 			p_SelectObject = NULL;

@@ -122,6 +122,9 @@
     <ClCompile Include="Timer.cpp">
       <Filter>Timer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\APPDATA\LOCAL\TEMP\TFSTEMP\VCTMP23260_102106.SHADER.00000000.CPP">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="과제2.rc">
