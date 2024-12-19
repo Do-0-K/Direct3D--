@@ -209,6 +209,8 @@ public:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE		m_d3dCbvGPUDescriptorHandle;
 
+	BoundingBox bounding_box1 = BoundingBox();
+
 	BoundingOrientedBox bounding_box = BoundingOrientedBox();
 	BoundingOrientedBox bullet_box = BoundingOrientedBox();
 	BoundingOrientedBox targetrange_box = BoundingOrientedBox();
@@ -287,6 +289,8 @@ public:
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
 
 	void SetActive(bool bActive) { isActive = bActive; }
+
+	void CalculateBounding();
 public:
 	void LoadMaterialsFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pParent, FILE* pInFile, CShader* pShader, int change);
 

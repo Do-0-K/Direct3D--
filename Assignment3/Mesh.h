@@ -111,7 +111,8 @@ protected:
 	UINT							m_nIndices = 0;
 	UINT							m_nStartIndex = 0;
 	int								m_nBaseVertex = 0;
-
+public:
+	BoundingBox						bounding_box1;
 protected:
 	UINT								m_nVertices = 0;
 
@@ -142,6 +143,7 @@ public:
 	virtual void PreRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) { }
 	virtual void PostRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) { }
 	virtual void OnPostRender(int nPipelineState) { }
+	void CalculateBoundingBox(XMFLOAT3* pxmf3Points, UINT nStride);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -35,7 +35,7 @@ struct LIGHT
     float padding;
 };
 
-cbuffer cbMaterial : register(b3)
+cbuffer cbMaterial : register(b5)
 {
     MATERIAL gMaterials[MAX_MATERIALS];
 };
@@ -57,7 +57,7 @@ cbuffer cbLights : register(b4)
 
 #define MAX_DEPTH_TEXTURES		MAX_LIGHTS
 
-Texture2D<float> gtxtDepthTextures[MAX_DEPTH_TEXTURES] : register(t2);
+Texture2D<float> gtxtDepthTextures[MAX_DEPTH_TEXTURES] : register(t16);
 SamplerComparisonState gssComparisonPCFShadow : register(s2);
 
 #define _WITH_PCF_FILTERING

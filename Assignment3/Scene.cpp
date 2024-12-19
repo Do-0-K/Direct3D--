@@ -198,16 +198,6 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights->m_pLights[3].m_xmf3Position = XMFLOAT3(0.0f, 128.0f, 0.0f);
 	m_pLights->m_pLights[3].m_xmf3Direction = XMFLOAT3(+1.0f, -1.0f, 0.0f);
 
-	//m_pLights->m_pLights[3].m_bEnable = false;
-	//m_pLights->m_pLights[3].m_nType = POINT_LIGHT;
-	//m_pLights->m_pLights[3].m_fRange = 100.0f;
-	//m_pLights->m_pLights[3].m_xmf4Ambient = XMFLOAT4(0.1f, 0.0f, 0.0f, 1.0f);
-	//m_pLights->m_pLights[3].m_xmf4Diffuse = XMFLOAT4(0.8f, 0.0f, 0.0f, 1.0f);
-	//m_pLights->m_pLights[3].m_xmf4Specular = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.0f);
-	//m_pLights->m_pLights[3].m_xmf3Position = XMFLOAT3(130.0f, 30.0f, 30.0f);
-	//m_pLights->m_pLights[3].m_xmf3Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	//m_pLights->m_pLights[3].m_xmf3Attenuation = XMFLOAT3(1.0f, 0.001f, 0.0001f);
-
 	m_pMaterials = new MATERIALS;
 	::ZeroMemory(m_pMaterials, sizeof(MATERIALS));
 
@@ -226,14 +216,14 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
 	CBillboardObjectsShader* pObjectShader = new CBillboardObjectsShader();
-	int nObjects = pObjectShader->GetNumberOfObjects();	
+	int nObjects = pObjectShader->GetNumberOfObjects();
 
 	kill = num;
 	m_nObject =  num;
 	m_ppObject = new CGunshipObject * [m_nObject];
 
 	m_pDescriptorHeap = new CDescriptorHeap();
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, nObjects + 10, 24);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, nObjects + 10, 25);
 	
 	BuildDefaultLightsAndMaterials();
 
@@ -256,12 +246,12 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		skymap[i] = new Skymap(sharedCubeMesh, sharedCubeMaterial);
 	}
 	
-	for (int i = 0; i < 5; ++i) {
-		for (int j = 0; j < 5; ++j) {
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
 			float randomScale = float(scal(gen));
-			skymap[(i * 5) + j]->SetPosition(100.0f + i * 400.0f, 550.0f - randomScale * 20.0f, 100.0f + j * 400.0f);
-			skymap[(i * 5) + j]->SetScale(1.0f, 3.0f, 1.0f);
-			skymap[(i * 5) + j]->UpdateBoundingBox();
+			skymap[(i * 3) + j]->SetPosition(100.0f + i * 1000.0f, 550.0f - randomScale * 20.0f, 100.0f + j * 1000.0f);
+			skymap[(i * 3) + j]->SetScale(1.0f, 3.0f, 1.0f);
+			skymap[(i * 3) + j]->UpdateBoundingBox();
 		}
 	}
 
@@ -332,6 +322,15 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_DirectLight->Rotate(0.0f, 0.0f, 45.0f);
 	m_DirectLight->SetPosition(XMFLOAT3(_PLANE_WIDTH * 0.25f, 450.0f, 0));
 
+	m_pDepthRenderShader = new CDepthRenderShader(pObjectShader, m_pLights->m_pLights);
+	DXGI_FORMAT pdxgiRtvFormats[1] = { DXGI_FORMAT_R32_FLOAT };
+	m_pDepthRenderShader->CreateShader(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,pdxgiRtvFormats,DXGI_FORMAT_D32_FLOAT);
+	m_pDepthRenderShader->BuildObjects(pd3dDevice, pd3dCommandList, NULL);
+
+	m_pShadowShader = new CShadowMapShader(pObjectShader);
+	m_pShadowShader->CreateShader(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, DXGI_FORMAT_D24_UNORM_S8_UINT);
+	m_pShadowShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pDepthRenderShader->GetDepthTexture());
+
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
@@ -373,9 +372,24 @@ void CScene::ReleaseObjects()
 		delete[] m_ppParticle;
 	}
 
+	if (m_pDepthRenderShader)
+	{
+		m_pDepthRenderShader->ReleaseShaderVariables();
+		m_pDepthRenderShader->ReleaseObjects();
+		m_pDepthRenderShader->Release();
+	}
+
+	if (m_pShadowShader)
+	{
+		m_pShadowShader->ReleaseShaderVariables();
+		m_pShadowShader->ReleaseObjects();
+		m_pShadowShader->Release();
+	}
+
 	ReleaseShaderVariables();
 
 	if (m_pLights) delete[] m_pLights;
+	if (m_pMaterials) delete m_pMaterials;
 }
 
 ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevice)
@@ -547,7 +561,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dDescriptorRanges[8].RegisterSpace = 0;
 	pd3dDescriptorRanges[8].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[14];
+	D3D12_ROOT_PARAMETER pd3dRootParameters[15];
 
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 1; //Camera
@@ -611,7 +625,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[11].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	pd3dRootParameters[12].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	pd3dRootParameters[12].Descriptor.ShaderRegister = 5; //ToLight Info
+	pd3dRootParameters[12].Descriptor.ShaderRegister = 6; //ToLight Info
 	pd3dRootParameters[12].Descriptor.RegisterSpace = 0;
 	pd3dRootParameters[12].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
@@ -619,6 +633,11 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[13].DescriptorTable.NumDescriptorRanges = 1;
 	pd3dRootParameters[13].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[8]; //Depth Buffer
 	pd3dRootParameters[13].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	pd3dRootParameters[14].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	pd3dRootParameters[14].Descriptor.ShaderRegister = 5; //Materials
+	pd3dRootParameters[14].Descriptor.RegisterSpace = 0;
+	pd3dRootParameters[14].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 #endif
 
 	D3D12_STATIC_SAMPLER_DESC pd3dSamplerDescs[2];
@@ -706,21 +725,23 @@ void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 	if (m_pd3dGraphicsRootSignature) pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
 	pd3dCommandList->SetDescriptorHeaps(1, &m_pDescriptorHeap->m_pd3dCbvSrvDescriptorHeap);
 
-	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
-	pCamera->UpdateShaderVariables(pd3dCommandList);
-
 	UpdateShaderVariables(pd3dCommandList);
 
 	if (m_pd3dcbMaterials)
 	{
 		D3D12_GPU_VIRTUAL_ADDRESS d3dcbMaterialsGpuVirtualAddress = m_pd3dcbMaterials->GetGPUVirtualAddress();
-		pd3dCommandList->SetGraphicsRootConstantBufferView(3, d3dcbMaterialsGpuVirtualAddress); //Materials
+		pd3dCommandList->SetGraphicsRootConstantBufferView(14, d3dcbMaterialsGpuVirtualAddress); //Materials
 	}
 	if (m_pd3dcbLights)
 	{
 		D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = m_pd3dcbLights->GetGPUVirtualAddress();
-		pd3dCommandList->SetGraphicsRootConstantBufferView(4, d3dcbLightsGpuVirtualAddress); //Lights
+		pd3dCommandList->SetGraphicsRootConstantBufferView(12, d3dcbLightsGpuVirtualAddress); //Lights
 	}
+
+	m_pDepthRenderShader->UpdateShaderVariables(pd3dCommandList);
+
+	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
+	pCamera->UpdateShaderVariables(pd3dCommandList);
 }
 
 void CScene::ReleaseUploadBuffers()
@@ -732,6 +753,8 @@ void CScene::ReleaseUploadBuffers()
 	for (int j = 0; j < m_nObject; j++) if (m_ppObject[j]) m_ppObject[j]->ReleaseUploadBuffers();
 	for (int j = 0; j < skymap_num; j++) if (skymap[j]) skymap[j]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nParticle; i++) m_ppParticle[i]->ReleaseUploadBuffers();
+	if (m_pShadowShader) m_pShadowShader->ReleaseUploadBuffers();
+	if (m_pDepthRenderShader) m_pDepthRenderShader->ReleaseUploadBuffers();
 }
 
 void CScene::setPlayer(CPlayer* n)
@@ -829,11 +852,23 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 		{
 			m_ppShaders[i]->Render(pd3dCommandList, pCamera, 0);
 		}
-		if (m_DirectLight) { m_DirectLight->Render(pd3dCommandList, pCamera); }
+		if (m_DirectLight) {
+			m_DirectLight->Render(pd3dCommandList, pCamera);
+		}
+
+		if (m_pShadowShader) m_pShadowShader->Render(pd3dCommandList, pCamera);
+
+		pCamera->SetViewportsAndScissorRects(pd3dCommandList);
+		pCamera->UpdateShaderVariables(pd3dCommandList);
 	}
 	else {
 		RenderParticle(pd3dCommandList, pCamera);
 	}
+}
+
+void CScene::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	m_pDepthRenderShader->PrepareShadowMap(pd3dCommandList, pCamera);
 }
 
 void CScene::RenderParticle(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)

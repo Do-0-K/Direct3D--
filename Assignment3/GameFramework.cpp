@@ -704,7 +704,9 @@ void CGameFramework::FrameAdvance()
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dRtvCPUDescriptorHandle, TRUE, &d3dDsvCPUDescriptorHandle);
 
-	if (m_pScene) m_pScene->OnPrepareRender(m_pd3dCommandList, m_pCamera);
+	if (m_pScene) {
+		m_pScene->OnPrepareRender(m_pd3dCommandList, m_pCamera);
+	}
 
 	UpdateShaderVariables();
 
@@ -726,7 +728,7 @@ void CGameFramework::FrameAdvance()
 	::SynchronizeResourceTransition(m_pd3dCommandList, m_ppd3dSwapChainBackBuffers[m_nSwapChainBufferIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	::ExecuteCommandList(m_pd3dCommandList, m_pd3dCommandQueue, m_pd3dFence, ++m_nFenceValues[m_nSwapChainBufferIndex], m_hFenceEvent);
 
-	if (change == 1) { m_pScene->OnPostRenderParticle(); }
+	if (change == 1) { m_pScene->OnPostRenderParticle(); m_pScene->OnPreRender(m_pd3dCommandList, m_pCamera);}
 
 	//WaitForGpuComplete();
 

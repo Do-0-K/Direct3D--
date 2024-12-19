@@ -914,6 +914,14 @@ CGameObject* CGameObject::LoadFrameHierarchyFromFile(ID3D12Device* pd3dDevice, I
 	return(pGameObject);
 }
 
+void CGameObject::CalculateBounding()
+{
+	bounding_box1 = m_pMesh->bounding_box1;
+	BoundingBox::CreateMerged(bounding_box1, bounding_box1 ,m_pMesh->bounding_box1);
+
+	bounding_box1.Transform(bounding_box1, XMLoadFloat4x4(&m_xmf4x4World));
+}
+
 void CGameObject::PrintFrameInfo(CGameObject* pGameObject, CGameObject* pParent)
 {
 	TCHAR pstrDebug[256] = { 0 };

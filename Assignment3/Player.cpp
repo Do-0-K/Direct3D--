@@ -321,7 +321,7 @@ CAirplanePlayer::CAirplanePlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommand
 	m_pCamera = ChangeCamera(FIRST_PERSON_CAMERA, 0.0f);
 
 	m_pShader = new CPlayerShader();
-	m_pShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	m_pShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, NULL, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
 	CGameObject* pGameObject = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Mi24.bin", m_pShader,change);
 	SetChild(pGameObject);

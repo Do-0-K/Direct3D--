@@ -94,6 +94,7 @@ public:
 	virtual void AnimateObjects(float fTimeElapsed);
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+	void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	void RenderParticle(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	void OnPostRenderParticle();
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
@@ -114,7 +115,7 @@ public:
 	int m_nObject = 0;
 	CGunshipObject** m_ppObject = NULL;
 
-	int skymap_num = 25;
+	int skymap_num = 9;
 	Skymap** skymap = NULL;
 
 	int									m_nShaders = 0;
@@ -142,6 +143,10 @@ public:
 	MATERIAL* m_pcbMappedMaterials = NULL;
 
 	float						m_fElapsedTime = 0.0f;
+
+	CDepthRenderShader* m_pDepthRenderShader = NULL;
+
+	CShadowMapShader* m_pShadowShader = NULL;
 
 	CGameObject* m_DirectLight = NULL;
 public:
