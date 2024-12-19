@@ -223,7 +223,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppObject = new CGunshipObject * [m_nObject];
 
 	m_pDescriptorHeap = new CDescriptorHeap();
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, nObjects + 10, 25);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, nObjects + 15, 28);
 	
 	BuildDefaultLightsAndMaterials();
 
@@ -331,6 +331,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_pShadowShader->CreateShader(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, DXGI_FORMAT_D24_UNORM_S8_UINT);
 	m_pShadowShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pDepthRenderShader->GetDepthTexture());
 
+	m_Mirror = new CPlanarMirrorShader();
+	m_Mirror->CreateShader(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_Mirror->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
+
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
@@ -353,6 +357,7 @@ void CScene::ReleaseObjects()
 	if (m_pSkyBox) delete m_pSkyBox;
 	if (m_pTerrain) delete m_pTerrain;
 	if (m_DirectLight)delete m_DirectLight;
+	if (m_Mirror)delete m_Mirror;
 
 	if (skymap)
 	{
@@ -561,7 +566,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dDescriptorRanges[8].RegisterSpace = 0;
 	pd3dDescriptorRanges[8].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[15];
+	D3D12_ROOT_PARAMETER pd3dRootParameters[17];
 
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 1; //Camera
@@ -638,6 +643,17 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[14].Descriptor.ShaderRegister = 5; //Materials
 	pd3dRootParameters[14].Descriptor.RegisterSpace = 0;
 	pd3dRootParameters[14].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	pd3dRootParameters[15].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	pd3dRootParameters[15].Descriptor.ShaderRegister = 7; //Reflection Matrix
+	pd3dRootParameters[15].Descriptor.RegisterSpace = 0;
+	pd3dRootParameters[15].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	pd3dRootParameters[16].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	pd3dRootParameters[16].Constants.Num32BitValues = 1;
+	pd3dRootParameters[16].Constants.ShaderRegister = 8; //Apply Reflection
+	pd3dRootParameters[16].Constants.RegisterSpace = 0;
+	pd3dRootParameters[16].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 #endif
 
 	D3D12_STATIC_SAMPLER_DESC pd3dSamplerDescs[2];
@@ -718,6 +734,11 @@ void CScene::ReleaseShaderVariables()
 		m_pd3dcbMaterials->Unmap(0, NULL);
 		m_pd3dcbMaterials->Release();
 	}
+	if (m_pTerrain) m_pTerrain->ReleaseShaderVariables();
+	if (m_pSkyBox) m_pSkyBox->ReleaseShaderVariables();
+	if (m_Mirror)m_Mirror->ReleaseShaderVariables();
+	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseShaderVariables();
+	for (int i = 0; i < m_nObject; i++) m_ppObject[i]->ReleaseShaderVariables();
 }
 
 void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
@@ -755,6 +776,7 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_nParticle; i++) m_ppParticle[i]->ReleaseUploadBuffers();
 	if (m_pShadowShader) m_pShadowShader->ReleaseUploadBuffers();
 	if (m_pDepthRenderShader) m_pDepthRenderShader->ReleaseUploadBuffers();
+	if (m_Mirror)m_Mirror->ReleaseUploadBuffers();
 }
 
 void CScene::setPlayer(CPlayer* n)
@@ -855,11 +877,9 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 		if (m_DirectLight) {
 			m_DirectLight->Render(pd3dCommandList, pCamera);
 		}
+		//if (m_pShadowShader) m_pShadowShader->Render(pd3dCommandList, pCamera);
+		if(m_Mirror)m_Mirror->Render(pd3dCommandList, pCamera);
 
-		if (m_pShadowShader) m_pShadowShader->Render(pd3dCommandList, pCamera);
-
-		pCamera->SetViewportsAndScissorRects(pd3dCommandList);
-		pCamera->UpdateShaderVariables(pd3dCommandList);
 	}
 	else {
 		RenderParticle(pd3dCommandList, pCamera);

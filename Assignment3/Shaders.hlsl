@@ -25,6 +25,16 @@ cbuffer cbFrameworkInfo : register(b3)
     int gnMaxFlareType2Particles : packoffset(c1.w);
 };
 
+cbuffer cbMirrorObjectInfo : register(b7)
+{
+    matrix gmtxReflect : packoffset(c0);
+};
+
+cbuffer cbOptionInfo : register(b8)
+{
+    uint gnApplyReflection : packoffset(c0);
+};
+
 #include "Light.hlsl"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,10 +230,12 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
 {
     VS_STANDARD_OUTPUT output;
 
-    output.positionW = (float3) mul(float4(input.position, 1.0f), gmtxGameObject);
-    output.normalW = mul(input.normal, (float3x3) gmtxGameObject);
-    output.tangentW = (float3) mul(float4(input.tangent, 1.0f), gmtxGameObject);
-    output.bitangentW = (float3) mul(float4(input.bitangent, 1.0f), gmtxGameObject);
+    matrix mtxGameObject = gmtxGameObject;
+    if (gnApplyReflection == 0xff00)mtxGameObject = mul(gmtxGameObject, gmtxReflect);
+    output.positionW = (float3) mul(float4(input.position, 1.0f), mtxGameObject);
+    output.normalW = mul(input.normal, (float3x3) mtxGameObject);
+    output.tangentW = (float3) mul(float4(input.tangent, 1.0f), mtxGameObject);
+    output.bitangentW = (float3) mul(float4(input.bitangent, 1.0f), mtxGameObject);
     output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
     output.uv = input.uv;
 
@@ -728,4 +740,45 @@ float4 PSShadowMapShadow(VS_SHADOW_MAP_OUTPUT input) : SV_TARGET
     float4 cIllumination = Lighting(input.positionW, normalize(input.normalW), true, input.shadowMapUVs);
 
     return (cIllumination);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct VS_CLEARDEPTH_OUTPUT
+{
+    float4 position : SV_POSITION;
+};
+
+VS_CLEARDEPTH_OUTPUT VSClearDepth(VS_TEXTURED_INPUT input)
+{
+    VS_CLEARDEPTH_OUTPUT output;
+	
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection).xyzz;
+	
+    return (output);
+}
+
+float4 PSClearDepth(VS_CLEARDEPTH_OUTPUT input) : SV_TARGET
+{
+    return (float4(0.0f, 0.0f, 0.2f, 0.0f));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+VS_TEXTURED_OUTPUT VSTextured(VS_TEXTURED_INPUT input)
+{
+    VS_TEXTURED_OUTPUT output;
+
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
+    output.uv = input.uv;
+
+    return (output);
+}
+
+float4 PSTextured(VS_TEXTURED_OUTPUT input) : SV_TARGET
+{
+    float4 cColor = gtxtStandardTextures[0].Sample(gssWrap, input.uv);
+    cColor.a = 0.25f;
+
+    return (cColor);
 }

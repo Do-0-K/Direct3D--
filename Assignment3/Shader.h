@@ -392,3 +392,41 @@ public:
 
 	CTexture* m_pDepthFromLightTexture = NULL;
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct VS_CB_REFLECTION_MATRIX
+{
+	XMFLOAT4X4						m_xmf4x4Reflect;
+};
+
+class CPlanarMirrorShader : public CStandardShader
+{
+public:
+	CPlanarMirrorShader();
+	virtual ~CPlanarMirrorShader();
+
+	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+
+	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
+	virtual void AnimateObjects(float fTimeElapsed);
+	virtual void ReleaseObjects();
+
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+
+	virtual void ReleaseUploadBuffers();
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
+
+protected:
+	CGunshipObject** m_ppObjects = NULL;
+	int								m_nObjects = 0;
+
+	CGameObject* m_pWallObject = NULL;
+	CGameObject* m_pMirrorObject = NULL;
+
+	ID3D12Resource* m_pd3dcbReflection = NULL;
+	VS_CB_REFLECTION_MATRIX* m_pcbMappedReflection = NULL;
+};

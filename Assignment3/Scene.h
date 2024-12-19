@@ -131,6 +131,8 @@ public:
 	CSkyBox* m_pSkyBox = NULL;
 	CHeightMapTerrain* m_pTerrain = NULL;
 
+	CPlanarMirrorShader* m_Mirror = NULL;
+
 	LIGHTS* m_pLights = NULL;
 	float							m_fLightRotationAngle = 0.0f;
 
