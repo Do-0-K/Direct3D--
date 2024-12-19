@@ -237,7 +237,7 @@ struct VS_LIGHTING_OUTPUT
 Texture2D gtxtTexture : register(t0);
 Texture2D<float4> gtxtTerrainBaseTexture : register(t1);
 Texture2D<float4> gtxtTerrainDetailTextures : register(t2);
-Texture2D<float4> gtxtTerrainAlphaTexture : register(t3);
+Texture2D<float> gtxtTerrainAlphaTexture : register(t3);
 TextureCube gtxtSkyCubeTexture : register(t4);
 Texture2D gtxtBulletTexture : register(t5);
 //#define _WITH_STANDARD_TEXTURE_MULTIPLE_PARAMETERS

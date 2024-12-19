@@ -223,7 +223,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppObject = new CGunshipObject * [m_nObject];
 
 	m_pDescriptorHeap = new CDescriptorHeap();
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, nObjects + 15, 28);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, nObjects + 25, 28);
 	
 	BuildDefaultLightsAndMaterials();
 
@@ -841,9 +841,8 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	}
 	if (m_pLights)
 	{
-		m_fLightRotationAngle += fTimeElapsed * 0.25f;
-		XMMATRIX xmmtxRotation = XMMatrixRotationY(fTimeElapsed * 0.25f);
-		XMStoreFloat3(&m_pLights->m_pLights[1].m_xmf3Direction, XMVector3TransformNormal(XMLoadFloat3(&m_pLights->m_pLights[1].m_xmf3Direction), xmmtxRotation));
+		m_pLights->m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
+		m_pLights->m_pLights[1].m_xmf3Direction = m_pPlayer->GetLookVector();
 	}
 }
 
@@ -877,7 +876,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 		if (m_DirectLight) {
 			m_DirectLight->Render(pd3dCommandList, pCamera);
 		}
-		if (m_pShadowShader) m_pShadowShader->Render(pd3dCommandList, pCamera);
+		//if (m_pShadowShader) m_pShadowShader->Render(pd3dCommandList, pCamera);
 		if(m_Mirror)m_Mirror->Render(pd3dCommandList, pCamera);
 
 	}

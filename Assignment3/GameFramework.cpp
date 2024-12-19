@@ -419,10 +419,10 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 		case 'Y':
 			m_pcbMappedFrameworkInfo->m_nRenderMode |= DYNAMIC_TESSELLATION;
 			break;
-		case 'D':
+		case 'F':
 			m_pcbMappedFrameworkInfo->m_nRenderMode |= (DYNAMIC_TESSELLATION | DEBUG_TESSELLATION);
 			break;
-		case 'W':
+		case 'Q':
 			::gbTerrainTessellationWireframe = !::gbTerrainTessellationWireframe;
 			break;
 		case VK_CONTROL:
